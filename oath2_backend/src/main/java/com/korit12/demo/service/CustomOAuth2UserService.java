@@ -1,5 +1,5 @@
 package com.korit12.demo.service;
-// security에 JwtAuthenticationFilar.java 생성
+// security에 JwtAuthenticationFilter.java 생성하시오.
 import com.korit12.demo.entity.User;
 import com.korit12.demo.repository.OAuth2UserRepository;
 import com.korit12.demo.repository.UserRepository;
@@ -24,24 +24,23 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
     private final OAuth2UserRepository oAuth2UserRepository;
 
-
     // 1. 부모 클래스로 구글 사용자 정보 조회(Access Token 사용)
     @Override
     @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        String provider = userRequest.getClientRegistration().getRegistrationId();  // "google"
+        String provider = userRequest.getClientRegistration().getRegistrationId(); // "google"
         String accessToken = userRequest.getAccessToken().getTokenValue();
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
         // 이상의 단계에서 구글에서 받아오는 정보의 예시
-        // { "sub":"123435...", "name" : "김일", "email" : "kim1@test.com" ... }
+        // { "sub": "123456...", "name": "김일", "email":"kim1@test.com", "picture": "..." }
         String providerId = (String)attributes.get("sub");
         String email = (String)attributes.get("email");
         String name = (String)attributes.get("name");
 
-        // 소셜 연동
+        // DB에서 소셜 연동 정보 조회
         com.korit12.demo.entity.OAuth2User savedOAuth2User = oAuth2UserRepository
                 .findByProviderAndProviderId(provider, providerId)
                 .orElse(null);
@@ -49,13 +48,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user;
 
         if(savedOAuth2User == null) {
-            // 최초 소셜 로그인 -> 자동 회원가입
-            user = userRepository.findByEmail(email).orElseGet(() -> userRepository.save(User.createOAuth2User(email, name)));
+            // 최초 소셜 로그인 -> 자동 회원 가입으로 넘겨야 함.
+            user = userRepository.findByEmail(email)
+                    .orElseGet(() -> userRepository.save(User.createOAuth2User(email, name)));
 
             oAuth2UserRepository.save(com.korit12.demo.entity.OAuth2User
                     .create(user, provider, providerId, accessToken));
         } else {
-            // 기존 소셜 로그인이 가능한 사람이면 Access Token만 갱신
+            // 기존 소셜 로그인이 가능한 사람이네요 -> Access Token만 갱신
             savedOAuth2User.updateAccessToken(accessToken);
             user = savedOAuth2User.getUser();
         }

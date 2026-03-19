@@ -12,12 +12,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    // 비지니스 오류 시(이메일 중복, 비밀번호 불일치 등)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException e) {
         log.warn("비지니스 오류 : {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    // @Valid 검증 실패
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream().map(fe -> fe.getDefaultMessage())
@@ -27,9 +29,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
 
+    // 그 외 오류(500 에러 관련)
     @ExceptionHandler(Exception.class)
-        public ResponseEntity<String> handleAllException(Exception e) {
-        log.warn("서버 오류: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    public ResponseEntity<String> handleException(Exception e) {
+        log.error("서버 오류 : {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
 }
