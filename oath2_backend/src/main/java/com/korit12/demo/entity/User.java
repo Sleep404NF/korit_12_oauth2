@@ -39,6 +39,7 @@ public class User {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }

@@ -10,9 +10,10 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  token: string;
+  token : string;
   email: string;
   name: string;
+  role: string;
 }
 
 // localstorage의 context에 저장하는 사용자 정보
